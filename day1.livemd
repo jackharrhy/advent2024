@@ -1,0 +1,60 @@
+# Advent 2024 - Day 1
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+{left_list, right_list} =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    [l, r] = line
+      |> String.split("  ")
+      |> Enum.map(&(String.to_integer(String.trim(&1))))
+    {l,r}
+  end)
+  |> Enum.unzip()
+
+{left_list, right_list}
+```
+
+## Part 1
+
+```elixir
+Enum.zip(Enum.sort(left_list), Enum.sort(right_list))
+  |> Enum.map(fn {l, r} ->
+    abs(l - r)
+  end)
+  |> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+calc_counts = fn list ->
+  list
+  |> Enum.group_by(&(&1))
+  |> Enum.map(fn {k, v} ->
+    {k, Enum.count(v)}
+  end)
+  |> Map.new()
+end
+
+left_counts = calc_counts.(left_list)
+right_counts = calc_counts.(right_list)
+
+for n <- left_list do
+  n * Map.get(right_counts, n, 0)
+end
+|> Enum.sum()
+```
