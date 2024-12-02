@@ -64,41 +64,21 @@ end
 ## Part 2
 
 ```elixir
-defmodule RedNoseResilientReports do
-  def process([a | [b | t]]) do
-    if a - b > 0 do
-      process([a | [b | t]], :up, true)
-    else
-      process([a | [b | t]], :down, true)
-    end
-  end
-  
-  def process([a | [b | t]], direction, can_ignore) do
-    correct_direction = case direction do
-      :up -> a - b > 0
-      :down -> a - b < 0
-    end
-  
-    diff = abs(b - a)
-    if (diff > 3 or diff == 0) or not correct_direction do
-      if can_ignore do
-        process([a | t], direction, false)
-      else
-        false
-      end
-    else
-      process([b | t], direction, true)
-    end
-  end
-
-  def process(report, _direction, _can_ignore) when is_list(report) and length(report) == 1 do
-    true
-  end
-end
-
 for report <- reports do
-  r = RedNoseResilientReports.process(report)
-  IO.inspect([r, report], charlists: :as_lists)
+  if RedNoseReports.process(report) do
+    true
+  else
+    for index_to_remove <- 0..length(reports) do
+      modified_report = 
+        report
+        |> Enum.with_index()
+        |> Enum.reject(fn {_value, index} -> index == index_to_remove end)
+        |> Enum.map(fn {value, _index} -> value end)
+
+      RedNoseReports.process(modified_report)
+    end
+    |> Enum.any?
+  end
 end
 |> Enum.count(&(&1))
 ```
