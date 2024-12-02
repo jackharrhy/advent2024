@@ -1,0 +1,104 @@
+# Advent 2024 - Day 2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+reports =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.split(" ")
+    |> Enum.map(&String.to_integer(&1))
+  end)
+```
+
+## Part 1
+
+```elixir
+defmodule RedNoseReports do
+  def process([a | [b | t]]) do
+    if a - b > 0 do
+      process([a | [b | t]], :up)
+    else
+      process([a | [b | t]], :down)
+    end
+  end
+  
+  def process([a | [b | t]], direction) do
+    correct_direction = case direction do
+      :up -> a - b > 0
+      :down -> a - b < 0
+    end
+  
+    diff = abs(b - a)
+    if (diff > 3 or diff == 0) or not correct_direction do
+      false
+    else
+      process([b | t], direction)
+    end
+  end
+
+  def process(report, _direction) when is_list(report) and length(report) == 1 do
+    true
+  end
+end
+
+for report <- reports do
+  RedNoseReports.process(report)
+end
+|> Enum.count(&(&1))
+```
+
+## Part 2
+
+```elixir
+defmodule RedNoseResilientReports do
+  def process([a | [b | t]]) do
+    if a - b > 0 do
+      process([a | [b | t]], :up, true)
+    else
+      process([a | [b | t]], :down, true)
+    end
+  end
+  
+  def process([a | [b | t]], direction, can_ignore) do
+    correct_direction = case direction do
+      :up -> a - b > 0
+      :down -> a - b < 0
+    end
+  
+    diff = abs(b - a)
+    if (diff > 3 or diff == 0) or not correct_direction do
+      if can_ignore do
+        process([a | t], direction, false)
+      else
+        false
+      end
+    else
+      process([b | t], direction, true)
+    end
+  end
+
+  def process(report, _direction, _can_ignore) when is_list(report) and length(report) == 1 do
+    true
+  end
+end
+
+for report <- reports do
+  r = RedNoseResilientReports.process(report)
+  IO.inspect([r, report], charlists: :as_lists)
+end
+|> Enum.count(&(&1))
+```
