@@ -19,15 +19,27 @@ instructions = input |> Kino.Input.read()
 ## Part 1
 
 ```elixir
-Regex.scan(~r/mul\((?<a>\d*),(?<b>\d*)\)/, instructions)
-|> Enum.map(fn [_match, a, b] ->
-  String.to_integer(a) * String.to_integer(b)
-end)
-|> Enum.sum()
+validate = fn instructions ->
+  Regex.scan(~r/mul\((?<a>\d*),(?<b>\d*)\)/, instructions)
+  |> Enum.map(fn [_match, a, b] ->
+    String.to_integer(a) * String.to_integer(b)
+  end)
+  |> Enum.sum()
+end
+
+validate.(instructions)
 ```
 
 ## Part 2
 
 ```elixir
-
+String.split("do()#{instructions}", "don't()")
+|> Enum.map(fn instructions ->
+  [_ignore | rest] = String.split(instructions, "do()")
+  rest |> Enum.join()
+end)
+|> Enum.join()
+|> then(fn instructions ->
+  validate.(instructions)
+end)
 ```
