@@ -1,0 +1,33 @@
+# Advent 2024 - Day 3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+instructions = input |> Kino.Input.read()
+```
+
+## Part 1
+
+```elixir
+Regex.scan(~r/mul\((?<a>\d*),(?<b>\d*)\)/, instructions)
+|> Enum.map(fn [_match, a, b] ->
+  String.to_integer(a) * String.to_integer(b)
+end)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+
+```
