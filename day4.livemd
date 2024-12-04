@@ -1,0 +1,34 @@
+# Advent 2024 - Day 4
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+  end)
+```
+
+## Part 1
+
+```elixir
+
+```
+
+## Part 2
+
+```elixir
+
+```

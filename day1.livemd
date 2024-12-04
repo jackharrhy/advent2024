@@ -41,17 +41,22 @@ Enum.zip(Enum.sort(left_list), Enum.sort(right_list))
 ## Part 2
 
 ```elixir
-calc_counts = fn list ->
-  list
+right_list
   |> Enum.group_by(&(&1))
   |> Enum.map(fn {k, v} ->
     {k, Enum.count(v)}
   end)
   |> Map.new()
-end
+  |> IO.inspect(charlists: :as_lists)
+```
 
-left_counts = calc_counts.(left_list)
-right_counts = calc_counts.(right_list)
+```elixir
+right_counts = right_list
+  |> Enum.group_by(&(&1))
+  |> Enum.map(fn {k, v} ->
+    {k, Enum.count(v)}
+  end)
+  |> Map.new()
 
 for n <- left_list do
   n * Map.get(right_counts, n, 0)
