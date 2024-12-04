@@ -13,18 +13,81 @@ input = Kino.Input.textarea("Please paste your input file")
 ```
 
 ```elixir
+input = input |> Kino.Input.read()
+
+rows = String.split(input, "\n")
+
+row_count = length(rows)
+col_count = Enum.at(rows, 0) |> String.length()
+
 input = input
-  |> Kino.Input.read()
-  |> String.split("\n")
-  |> Enum.map(fn line ->
-    line
-  end)
+  |> String.replace("\n", "")
+  |> String.graphemes()
+  |> Enum.map(&(String.to_atom(&1)))
+
+{row_count, col_count}
 ```
 
 ## Part 1
 
 ```elixir
+x_locations = input
+|> Enum.with_index()
+|> Enum.filter(fn {char, _index} -> char == :X end)
 
+defmodule WordSearch do
+  @next %{
+    :X => :M,
+    :M => :A,
+    :A => :S
+  }
+
+  def navigate({input, row_count, col_count} = board, {x, y}, vec, expecting) do
+    if (x < 0 or x > row_count) or (y < 0 or y > col_count) do
+      false
+    else
+      index = row_count * y + x
+      val = Enum.at(input, index)
+
+      if val == expecting do
+        if val == :S do
+          true
+        else
+          {x_mod, y_mod} = vec
+          pos = {x + x_mod, y + y_mod}
+          navigate(board, pos, vec, Map.fetch!(@next, expecting))
+        end
+      else
+        false
+      end
+    end
+  end
+
+  def find_xmases({_input, row_count, col_count} = board, start_index) do
+    i_x = rem(start_index, col_count)
+    i_y = div(start_index, row_count)
+
+    for x <- -1..1 do
+      for y <- -1..1 do
+        if x == 0 && y == 0 do
+          false
+        else
+          vec = {x, y}
+          pos = {i_x + x, i_y + y}
+          navigate(board, pos, vec, :M)
+        end
+      end
+    end
+    |> List.flatten()
+    |> Enum.filter(&(&1))
+  end
+end
+
+for {_x, x_location} <- x_locations do
+  WordSearch.find_xmases({input, row_count, col_count}, x_location)
+end
+|> List.flatten()
+|> Enum.count()
 ```
 
 ## Part 2
