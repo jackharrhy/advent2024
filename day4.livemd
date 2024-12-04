@@ -35,7 +35,7 @@ x_locations = input
 |> Enum.with_index()
 |> Enum.filter(fn {char, _index} -> char == :X end)
 
-defmodule WordSearch do
+defmodule WordSearchV1 do
   @next %{
     :X => :M,
     :M => :A,
@@ -84,7 +84,7 @@ defmodule WordSearch do
 end
 
 for {_x, x_location} <- x_locations do
-  WordSearch.find_xmases({input, row_count, col_count}, x_location)
+  WordSearchV1.find_xmases({input, row_count, col_count}, x_location)
 end
 |> List.flatten()
 |> Enum.count()
@@ -93,5 +93,55 @@ end
 ## Part 2
 
 ```elixir
+a_locations = input
+|> Enum.with_index()
+|> Enum.filter(fn {char, _index} -> char == :A end)
 
+defmodule WordSearchV2 do
+  def get_value_from_pos({input, row_count, col_count}, x, y) do
+    if x < 0 or x >= col_count or y < 0 or y >= row_count do
+      nil
+    else
+      index = row_count * y + x
+      Enum.at(input, index)
+    end
+  end
+  
+  def find_x_mases({_input, row_count, col_count} = board, center) do
+    c_x = rem(center, col_count)
+    c_y = div(center, row_count)
+
+    if c_x - 1 < 0 or c_x + 1 > col_count or c_y - 1 < 0 or c_y + 1 > row_count do
+      false
+    else
+      top_left = get_value_from_pos(board, c_x - 1, c_y - 1)
+      top_right = get_value_from_pos(board, c_x + 1, c_y - 1)
+      bottom_left = get_value_from_pos(board, c_x - 1, c_y + 1)
+      bottom_right = get_value_from_pos(board, c_x + 1, c_y + 1)
+
+      left_pair = case {top_left, bottom_right} do
+        {:M, :S} -> true
+        {:S, :M} -> true
+        _ -> false
+      end
+
+      right_pair = case {top_right, bottom_left} do
+        {:M, :S} -> true
+        {:S, :M} -> true
+        _ -> false
+      end
+
+      is_valid = left_pair and right_pair
+      
+      is_valid
+    end
+  end
+end
+
+for {_x, a_location} <- a_locations do
+  WordSearchV2.find_x_mases({input, row_count, col_count}, a_location)
+end
+|> List.flatten()
+|> Enum.filter(&(&1))
+|> Enum.count()
 ```
