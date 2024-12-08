@@ -1,0 +1,100 @@
+# Advent 2024 - Day 6
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(&(String.graphemes(&1)))
+```
+
+```elixir
+
+```
+
+## Part 1
+
+```elixir
+defmodule PatrolPlanner do
+  @movement_map %{
+    {0, -1} => {1, 0},
+    {1, 0} => {0, 1},
+    {0, 1} => {-1, 0},
+    {-1, 0} => {0, -1}
+  }
+  
+  def run(input) do
+    guard_pos = input
+    |> Enum.with_index()
+    |> Enum.find_value(fn {row, y_index} ->
+      row
+      |> Enum.with_index()
+      |> Enum.find_value(fn {cell, x_index} ->
+        if cell == "^" do
+          {x_index, y_index}
+        else
+          nil
+        end
+      end)
+    end)
+
+    movement = {0, -1}
+    visited = MapSet.new([guard_pos])
+
+    navigate(input, guard_pos, movement, visited)
+  end
+
+  def cell_value(input, {x, y}) do
+    if x < 0 or y < 0 or y >= length(input) or x >= input |> Enum.at(0) |> length do
+      nil
+    else
+      input |> Enum.at(y) |> Enum.at(x)
+    end
+  end
+
+  def navigate(input, {p_x, p_y} = position, {m_x, m_y} = movement, visited) do
+    next_pos = {p_x + m_x, p_y + m_y}
+
+    cell = cell_value(input, next_pos)
+
+    if cell == "." or cell == "^" do
+      navigate(input, next_pos, movement, MapSet.put(visited, next_pos))
+    else
+      if cell == nil do
+        visited
+      else
+        next_movement = Map.fetch!(@movement_map, movement)
+        navigate(input, position, next_movement, visited)
+      end
+    end
+  end
+end
+
+PatrolPlanner.run(input)
+|> MapSet.size()
+```
+
+## Part 2
+
+```elixir
+for {col, y} <- input |> Enum.with_index() do
+  for {val, x} <- col |> Enum.with_index() do
+    if val == "#" or val == "^" do
+      nil
+    else
+      List.replace_at(input, y, List.replace_at(col, x, "#"))
+    end
+  end
+end
+```
