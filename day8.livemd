@@ -1,0 +1,65 @@
+# Advent 2024 - Day 8
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+```
+
+```elixir
+defmodule HugeAntenna do
+end
+```
+
+## Part 1
+
+```elixir
+antennas = for {col, y} <- input |> Enum.with_index() do
+  for {val, x} <- col |> Enum.with_index() do
+    if val != "." do
+      {val, {x, y}}
+    end
+  end
+end
+|> List.flatten()
+|> Enum.filter(&(&1))
+|> Enum.group_by(fn {val, _} -> val end)
+|> Enum.map(fn {k, v} -> {k, v |> Enum.map(fn {^k, pos} -> pos end)} end)
+|> Map.new()
+```
+
+```elixir
+max_value = length(input)
+
+for {_, positions} <- antennas do
+  for {a_x, a_y} = a <- positions, {b_x, b_y} = b <- positions, a != b do
+    {x, y} = {b_x - a_x, b_y - a_y}
+
+    {b_x + x, b_y + y}
+  end
+end
+|> List.flatten()
+|> Enum.filter(fn {x, y} ->
+  not (x < 0 or y < 0 or x >= max_value or y >= max_value)
+end)
+|> MapSet.new()
+```
+
+## Part 2
+
+```elixir
+
+```
