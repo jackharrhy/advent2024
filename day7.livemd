@@ -1,0 +1,86 @@
+# Advent 2024 - Day 7
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    [target, nums] = String.split(line, ": ")
+
+    {
+      String.to_integer(target),
+      nums |> String.split(" ") |> Enum.map(&(String.to_integer(&1)))
+    }
+  end)
+```
+
+```elixir
+defmodule ElephantMath do
+  def run(goal, nums, symbols) do
+    for combo <- possible_combos(nums, symbols) do
+      calculate(combo) == goal
+    end
+  end
+
+  def calculate([a | [symbol | [b | rest]]]) do
+    result = case symbol do
+      :+ -> a + b
+      :* -> a * b
+      :|| -> String.to_integer("#{Integer.to_string(a)}#{Integer.to_string(b)}")
+    end
+
+    calculate([result | rest])
+  end
+
+  def calculate([value]) do
+    value
+  end
+
+  def possible_combos([a | [b | rest]], symbols) do
+    for section <- possible_combos([b | rest], symbols) do
+      symbols |> Enum.map(&([a, &1] ++ section))
+    end
+    |> Enum.concat()
+  end
+
+  def possible_combos([x], _symbols) do
+    [[x]]
+  end
+end
+```
+
+## Part 1
+
+```elixir
+for {goal, nums} <- input do
+  if ElephantMath.run(goal, nums, [:+, :*]) |> Enum.any?() do
+    goal
+  end
+end
+|> Enum.filter(&(&1))
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+for {goal, nums} <- input do
+  if ElephantMath.run(goal, nums, [:+, :*, :||]) |> Enum.any?() do
+    goal
+  end
+end
+|> Enum.filter(&(&1))
+|> Enum.sum()
+```
