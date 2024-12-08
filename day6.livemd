@@ -20,12 +20,6 @@ input = input
 ```
 
 ```elixir
-
-```
-
-## Part 1
-
-```elixir
 defmodule PatrolPlanner do
   @movement_map %{
     {0, -1} => {1, 0},
@@ -50,7 +44,7 @@ defmodule PatrolPlanner do
     end)
 
     movement = {0, -1}
-    visited = MapSet.new([guard_pos])
+    visited = MapSet.new([{guard_pos, movement}])
 
     navigate(input, guard_pos, movement, visited)
   end
@@ -69,7 +63,13 @@ defmodule PatrolPlanner do
     cell = cell_value(input, next_pos)
 
     if cell == "." or cell == "^" do
-      navigate(input, next_pos, movement, MapSet.put(visited, next_pos))
+      visited_key = {next_pos, movement}
+
+      if MapSet.member?(visited, visited_key) do
+        :loop_detected
+      else
+        navigate(input, next_pos, movement, MapSet.put(visited, visited_key))
+      end
     else
       if cell == nil do
         visited
@@ -81,7 +81,15 @@ defmodule PatrolPlanner do
   end
 end
 
+
+```
+
+## Part 1
+
+```elixir
 PatrolPlanner.run(input)
+|> Enum.map(fn {pos, _mov} -> pos end)
+|> MapSet.new()
 |> MapSet.size()
 ```
 
@@ -93,8 +101,13 @@ for {col, y} <- input |> Enum.with_index() do
     if val == "#" or val == "^" do
       nil
     else
-      List.replace_at(input, y, List.replace_at(col, x, "#"))
+      modified_input = List.replace_at(input, y, List.replace_at(col, x, "#"))
+
+      PatrolPlanner.run(modified_input)
     end
   end
+  |> Enum.filter(&(&1 == :loop_detected))
 end
+|> List.flatten()
+|> Enum.count()
 ```
