@@ -96,7 +96,7 @@ PatrolPlanner.run(input)
 ## Part 2
 
 ```elixir
-for {col, y} <- input |> Enum.with_index() do
+handle_column = fn input, {col, y} ->
   for {val, x} <- col |> Enum.with_index() do
     if val == "#" or val == "^" do
       nil
@@ -108,6 +108,11 @@ for {col, y} <- input |> Enum.with_index() do
   end
   |> Enum.filter(&(&1 == :loop_detected))
 end
+
+input
+|> Enum.with_index()
+|> Task.async_stream(&(handle_column.(input, &1)))
+|> Enum.map(fn {:ok, resp} -> resp end)
 |> List.flatten()
 |> Enum.count()
 ```
