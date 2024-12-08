@@ -42,16 +42,22 @@ rule_lookup = rules
   end)
   |> Map.new()
 
-for update <- updates do
-  is_valid = for {num, index} <- Enum.with_index(update) do
+check_valid = fn update ->
+  update
+  |> Enum.with_index()
+  |> Enum.reduce_while(true, fn {num, index}, true ->
     {before_updates, _after_updates} = update |> Enum.split(index)
 
-    for before_update <- before_updates do
-      Enum.member?(Map.get(rule_lookup, before_update, []), num)
+    if Enum.member?(Map.get(rule_lookup, before_update, []), num) do
+      {:cont, true}
+    else
+      {:halt, {false, index}}
     end
-  end
-  |> List.flatten()
-  |> Enum.all?()
+  end)
+end
+
+for update <- updates do
+  is_valid = check_valid.(update)
 
   if is_valid do
     Enum.at(update, floor(length(update) / 2))
@@ -66,5 +72,14 @@ end
 ## Part 2
 
 ```elixir
+for update <- updates do
+  is_valid = check_valid.(update)
 
+  if is_valid do
+    nil
+  else
+    update
+    IO.inspect(update)
+  end
+end
 ```
