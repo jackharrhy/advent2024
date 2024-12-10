@@ -1,0 +1,109 @@
+# Advent 2024 - Day 10
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+map = input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.graphemes()
+    |> Enum.map(fn char ->
+      case Integer.parse(char) do
+        {val, ""} -> val
+        :error -> nil
+      end
+    end)
+  end)
+```
+
+```elixir
+defmodule TrailExplorer do
+  def get_valid_surronding(map, {x, y}, val) do
+    surronding = [
+      {x, y - 1},
+      {x + 1, y},
+      {x, y + 1},
+      {x - 1, y}
+    ]
+
+    for {x, y} <- surronding do
+      if x < 0 or y < 0 or x >= length(map) or y >= length(map) do
+        nil
+      else
+        if map |> Enum.at(y) |> Enum.at(x) == val + 1 do
+          {val + 1, x, y}
+        else
+          nil
+        end
+      end
+    end
+    |> Enum.filter(&(&1))
+  end
+
+  def navigate(map, position, val) do
+    for {val, x, y} <- get_valid_surronding(map, position, val) do
+      if val == 9 do
+        {x, y}
+      else
+        navigate(map, {x, y}, val)
+      end
+    end
+  end
+
+  def score(map, trailhead, distinct) do
+    endings = navigate(map, trailhead, 0)
+    |> List.flatten()
+
+    if distinct do
+      endings
+      |> MapSet.new()
+      |> MapSet.size()
+    else
+      endings
+      |> length()
+    end
+  end
+end
+```
+
+```elixir
+trailheads = for {row, y} <- map |> Enum.with_index() do
+  for {val, x} <- row |> Enum.with_index() do
+    if val == 0 do
+      {x, y}
+    end
+  end
+end
+|> List.flatten()
+|> Enum.filter(&(&1))
+```
+
+## Part 1
+
+```elixir
+for trailhead <- trailheads do
+  TrailExplorer.score(map, trailhead, true)
+end
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+for trailhead <- trailheads do
+  TrailExplorer.score(map, trailhead, false)
+end
+|> Enum.sum()
+```
