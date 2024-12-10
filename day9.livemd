@@ -1,0 +1,75 @@
+# Advent 2024 - Day 9
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.graphemes()
+  |> Enum.map(&(String.to_integer/1))
+```
+
+## Part 1
+
+```elixir
+disk = input
+|> Enum.with_index()
+|> Enum.map(fn {num, index} ->
+  value = if rem(index, 2) == 0 do
+    div((index), 2)
+  else
+    nil
+  end
+
+  List.duplicate(value, num)
+end)
+|> List.flatten()
+```
+
+```elixir
+defmodule GParted do
+  def defrag(disk) do
+    defrag(disk, 0, length(disk) - 1)
+  end
+
+  def defrag(disk, current_index, max_index) when current_index > max_index do
+    disk
+  end
+
+  def defrag(disk, current_index, max_index) do
+    if Enum.at(disk, current_index) == nil do
+      {val, disk} = List.pop_at(disk, max_index)
+
+      if val == nil do
+        defrag(disk, current_index, max_index - 1)
+      else
+        disk = disk |> List.replace_at(current_index, val)
+        defrag(disk, current_index + 1, max_index - 1)
+      end
+    else
+      defrag(disk, current_index + 1, max_index)
+    end
+  end
+end
+
+GParted.defrag(disk)
+|> Enum.with_index()
+|> Enum.map(fn {pos, index} -> pos * index end)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+
+```
