@@ -22,7 +22,7 @@ input = input
 ## Part 1
 
 ```elixir
-disk = input
+disk_in_chunks = input
 |> Enum.with_index()
 |> Enum.map(fn {num, index} ->
   value = if rem(index, 2) == 0 do
@@ -61,8 +61,10 @@ defmodule GParted do
     end
   end
 end
+```
 
-GParted.defrag(disk)
+```elixir
+GParted.defrag(disk_in_chunks)
 |> Enum.with_index()
 |> Enum.map(fn {pos, index} -> pos * index end)
 |> Enum.sum()
@@ -71,5 +73,97 @@ GParted.defrag(disk)
 ## Part 2
 
 ```elixir
+disk_in_files = input
+|> Enum.with_index()
+|> Enum.map(fn {num, index} ->
+  id = div((index), 2)
+  if rem(index, 2) == 0 do
+    {:file, id, num}
+  else
+    {:empty, num}
+  end
+end)
+|> List.flatten()
+```
 
+```elixir
+defmodule FDisk do
+  def display(disk) do
+    for entity <- disk do
+      case entity do
+        {:file, id, size} -> String.duplicate(Integer.to_string(id), size)
+        {:empty, size} -> String.duplicate(".", size)
+      end
+    end
+    |> Enum.join()
+  end
+
+  def manipulate(disk) do
+    to_move = disk
+      |> Enum.reverse()
+      |> Enum.filter(fn
+        {:file, _, _} -> true
+        _ -> false
+      end)
+
+    manipulate(disk, to_move)
+  end
+
+  def manipulate(disk, to_move) when length(to_move) == 0 do
+    disk
+  end
+
+  def manipulate(disk, [{:file, id, size} = file | rest]) do
+    # IO.puts(disk |> display())
+
+    {_, file_index} = disk
+      |> Enum.with_index()
+      |> Enum.find(nil, fn
+        {{:file, file_id, _size}, _} when file_id == id -> true
+        _ -> false
+      end)
+  
+    empty_space = disk
+      |> Enum.with_index()
+      |> Enum.find(nil, fn
+        {{:empty, gap}, index} when gap >= size and index < file_index -> true
+        _ -> false
+      end)
+
+    if empty_space == nil do
+      manipulate(disk, rest)
+    else
+      {{:empty, gap}, gap_index} = empty_space
+
+      disk = disk
+        |> List.replace_at(file_index, {:empty, size})
+        |> List.replace_at(gap_index, file)
+
+      disk = if gap == size do
+        disk
+      else
+        disk |> List.insert_at(gap_index + 1, {:empty, gap - size})
+      end
+
+      manipulate(disk, rest)
+    end
+  end
+end
+```
+
+```elixir
+FDisk.manipulate(disk_in_files)
+|> Enum.reduce({0, 0}, fn
+  {:file, id, size}, {total, index} ->
+    total = total + (for x <- index..(index + (size - 1)) do
+      IO.inspect({id, x})
+      id * x
+    end
+    |> Enum.sum())
+  
+    {total, index + size}
+  {:empty, size}, {total, index} ->
+    {total, index + size}
+end)
+|> elem(0)
 ```
