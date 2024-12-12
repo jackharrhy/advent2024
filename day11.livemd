@@ -1,0 +1,54 @@
+# Advent 2024 - Day 11
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.split(" ")
+  |> Enum.map(&(String.to_integer/1))
+```
+
+## Part 1
+
+```elixir
+1..25
+|> Enum.reduce(input, fn _, acc ->
+  for stone <- acc do
+    if stone == 0 do
+      [0]
+    else
+      stone_as_text = Integer.to_string(stone)
+      stone_length = String.length(stone_as_text)
+
+      if rem(stone_length, 2) == 0 do
+        {a, b} = String.split_at(stone_as_text, div(stone_length, 2))
+        [
+          String.to_integer(a),
+          String.to_integer(b)
+        ]
+      else
+        stone * 2024
+      end
+    end
+  end
+  |> List.flatten()
+end)
+|> Enum.count()
+```
+
+## Part 2
+
+```elixir
+
+```
