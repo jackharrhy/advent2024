@@ -26,7 +26,7 @@ input = input
 |> Enum.reduce(input, fn _, acc ->
   for stone <- acc do
     if stone == 0 do
-      [0]
+      [1]
     else
       stone_as_text = Integer.to_string(stone)
       stone_length = String.length(stone_as_text)
@@ -50,5 +50,33 @@ end)
 ## Part 2
 
 ```elixir
+input = Enum.frequencies(input)
 
+update_count = fn map, stone, count ->
+  map
+  |> Map.put(stone, Map.get(map, stone, 0))
+  |> Map.update!(stone, fn current_count -> current_count + count end)
+end
+
+1..75
+|> Enum.reduce(input, fn _, acc ->
+  Enum.reduce(acc, %{}, fn {stone, count}, acc ->
+    if stone == 0 do
+      update_count.(acc, 1, count)
+    else
+      stone_as_text = Integer.to_string(stone)
+      stone_length = String.length(stone_as_text)
+
+      if rem(stone_length, 2) == 0 do
+        {a, b} = String.split_at(stone_as_text, div(stone_length, 2))
+        acc = update_count.(acc, String.to_integer(a), count)
+        update_count.(acc, String.to_integer(b), count)
+      else
+        update_count.(acc, stone * 2024, count)
+      end
+    end
+  end)
+end)
+|> Map.values()
+|> Enum.sum()
 ```
