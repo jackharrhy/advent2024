@@ -1,0 +1,137 @@
+# Advent 2024 - Day 12
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.14.2"}
+])
+```
+
+## Setup
+
+```elixir
+input = Kino.Input.textarea("Please paste your input file")
+```
+
+```elixir
+input = input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+```
+
+```elixir
+defmodule McMasterCarr do
+  def get_surronding({x, y}) do
+    [
+      {x, y - 1},
+      {x + 1, y},
+      {x, y + 1},
+      {x - 1, y}
+    ]
+  end
+
+  def get_valid_surronding(board, seen, pos, val) do
+    for {x, y} <- get_surronding(pos) do
+      if x < 0 or y < 0 or x >= length(board) or y >= length(board) do
+        nil
+      else
+        if board |> Enum.at(y) |> Enum.at(x) == val do
+          if MapSet.member?(seen, {x, y}) do
+            nil
+          else
+            {x, y}
+          end
+        else
+          nil
+        end
+      end
+    end
+    |> Enum.filter(&(&1))
+  end
+
+  def cell_value(board, {x, y}) do
+    if x < 0 or y < 0 or y >= length(board) or x >= board |> Enum.at(0) |> length do
+      nil
+    else
+      board |> Enum.at(y) |> Enum.at(x)
+    end
+  end
+
+  def find_chunks(board, pos, seen) do
+    val = cell_value(board, pos)
+    pieces = [pos]
+    get_valid_surronding(board, seen, pos, val)
+    |> Enum.reduce({pieces, seen}, fn pos, {pieces, seen} ->
+      seen = MapSet.put(seen, pos)
+      {new_pieces, seen} = find_chunks(board, pos, seen)
+      pieces = pieces ++ new_pieces
+
+      {pieces, seen}
+    end)
+  end
+
+  def find_all_chunks(board) do
+    positions = for x <- 0..(length(board) - 1) do
+      for y <- 0..(length(board) - 1) do
+        {x, y}
+      end
+    end
+    |> List.flatten()
+
+    {_seen, chunks} = Enum.reduce(positions, {MapSet.new(), []}, fn pos, {seen, chunks} ->
+      if MapSet.member?(seen, pos) do
+        {seen, chunks}
+      else
+        seen = MapSet.put(seen, pos)
+        {pieces, seen} = find_chunks(board, pos, seen)
+        chunks = [MapSet.new(pieces) | chunks]
+        {seen, chunks}
+      end
+    end)
+
+    chunks
+  end
+end
+```
+
+## Part 1
+
+```elixir
+McMasterCarr.find_all_chunks(input)
+|> Enum.map(fn pieces ->
+  fences = pieces
+  |> Enum.map(fn piece ->
+    McMasterCarr.get_surronding(piece)
+    |> Enum.map(fn pos ->
+      not MapSet.member?(pieces, pos)
+    end)
+    |> Enum.filter(&(&1))
+    |> Enum.count()
+  end)
+  |> Enum.sum()
+
+  MapSet.size(pieces) * fences
+end)
+|> Enum.sum()
+```
+
+## Part 2
+
+```elixir
+McMasterCarr.find_all_chunks(input)
+|> Enum.map(fn pieces ->
+  pieces
+  |> Enum.map(fn piece ->
+    McMasterCarr.get_surronding(piece)
+    |> Enum.with_index()
+    |> Enum.filter(fn {pos, _index} ->
+      not MapSet.member?(pieces, pos)
+    end)
+  end)
+  |> List.flatten()
+  |> Enum.group_by(fn {_pos, direction} -> direction end)
+  |> Enum.map(fn {direction, fences} ->
+    check
+  end)
+end)
+```
