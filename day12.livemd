@@ -118,9 +118,62 @@ end)
 ## Part 2
 
 ```elixir
+defmodule Grainger do
+  def get_surronding({{x, y}, direction}) do
+    if direction == 0 or direction == 2 do
+      [
+        {{x + 1, y}, direction},
+        {{x - 1, y}, direction},
+      ]
+    else
+      [
+        {{x, y - 1}, direction},
+        {{x, y + 1}, direction}
+      ]
+    end
+  end
+
+  def get_valid_surronding(fences, seen, fence) do
+    for fence <- get_surronding(fence) do
+      if MapSet.member?(seen, fence) or not MapSet.member?(fences, fence) do
+        nil
+      else
+        fence
+      end
+    end
+    |> Enum.filter(&(&1))
+  end
+
+  def find_chunks(fences, fence, seen) do
+    pieces = MapSet.new([fence])
+    get_valid_surronding(fences, seen, fence)
+    |> Enum.reduce({pieces, seen}, fn fence, {pieces, seen} ->
+      seen = MapSet.put(seen, fence)
+      {new_pieces, seen} = find_chunks(fences, fence, seen)
+      pieces = MapSet.union(pieces, new_pieces)
+
+      {pieces, seen}
+    end)
+  end
+
+  def combine_fences(fences) do
+    {_seen, chunks} = Enum.reduce(fences, {MapSet.new(), []}, fn fence, {seen, chunks} ->
+      if MapSet.member?(seen, fence) do
+        {seen, chunks}
+      else
+        seen = MapSet.put(seen, fence)
+        {pieces, seen} = find_chunks(fences, fence, seen)
+        chunks = [pieces | chunks]
+        {seen, chunks}
+      end
+    end)
+    chunks
+  end
+end
+
 McMasterCarr.find_all_chunks(input)
 |> Enum.map(fn pieces ->
-  pieces
+  fences = pieces
   |> Enum.map(fn piece ->
     McMasterCarr.get_surronding(piece)
     |> Enum.with_index()
@@ -130,8 +183,13 @@ McMasterCarr.find_all_chunks(input)
   end)
   |> List.flatten()
   |> Enum.group_by(fn {_pos, direction} -> direction end)
-  |> Enum.map(fn {direction, fences} ->
-    check
+  |> Enum.map(fn {_direction, fences} ->
+    Grainger.combine_fences(fences |> MapSet.new())
+    |> Enum.count()
   end)
+  |> Enum.sum()
+
+  MapSet.size(pieces) * fences
 end)
+|> Enum.sum()
 ```
